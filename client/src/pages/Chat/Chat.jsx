@@ -5,12 +5,14 @@ import chatbotImg from "../../assets/chat_bot.png";
 import { FaArrowDown } from "react-icons/fa6";
 import { MdOutlineLogout } from "react-icons/md";
 import LogoutModal from "../../components/loader/modal/LogoutModal";
+import axios from "../../api/axios";
+import ReactMarkdown from "react-markdown";
 
 const Chat = () => {
   const [messages, setMessages] = useState([
     {
       type: "bot",
-      text: "Hi! How can I assist you today? Lorem ipsum dolor sit amet consectetur adipisicing elit.",
+      text: "Hi! How can I assist you today?",
     },
   ]);
   const [isLoading, setIsLoading] = useState(false);
@@ -20,6 +22,28 @@ const Chat = () => {
   const messagesContainerRef = useRef(null); // To reference the messages container
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+
+  const handlePrompt = async () => {
+    if (isLoading || !input.trim()) return;
+
+    setMessages([...messages, { type: "user", text: input }]);
+    setInput("");
+    setIsLoading(true);
+
+    try {
+      const response = await axios.post("/chatbot/prompt", { prompt: input });
+
+      setMessages([
+        ...messages,
+        { type: "user", text: input },
+        { type: "bot", text: response.data.response },
+      ]);
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error sending message:", error.message);
+      setIsLoading(false);
+    }
+  };
 
   const toggleModal = () => {
     setIsOpen(!isOpen);
@@ -64,26 +88,9 @@ const Chat = () => {
   //   messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   //   checkScroll(); // Recheck scroll visibility after scrolling
   // }, [messages]);
-
-  const handleSend = () => {
-    if (isLoading || !input.trim()) return;
-
-    setMessages([...messages, { type: "user", text: input }]);
-    setInput("");
-    setIsLoading(true);
-
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          type: "bot",
-          text: "Thank you for your query! I'll look into it.",
-        },
-      ]);
-      setIsLoading(false);
-    }, 2000);
+  const formatResponse = (response) => {
+    return response.replace(/\n/g, "<br>");
   };
-
   return (
     <div className="flex flex-col h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
       <nav className="flex justify-between items-center py-4 px-8 shadow-lg bg-gradient-to-r from-blue-500 via-cyan-500 to-blue-400 dark:bg-gradient-to-r dark:from-gray-800 dark:via-gray-700 dark:to-gray-900">
@@ -101,19 +108,6 @@ const Chat = () => {
             <div className="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-md text-blue-500 font-bold cursor-pointer dark:bg-gray-700 dark:text-gray-300">
               J
             </div>
-            {/* <div className="absolute hidden group-hover:block top-12 right-0 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
-              <ul className="text-gray-700 dark:text-gray-200">
-                <li className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
-                  Profile
-                </li>
-                <li className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
-                  Settings
-                </li>
-                <li className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
-                  Logout
-                </li>
-              </ul>
-            </div> */}
           </div>
           <div>
             <MdOutlineLogout
@@ -150,8 +144,11 @@ const Chat = () => {
                   ? "bg-blue-500 text-white"
                   : "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
               } rounded-lg p-4 md:max-w-2xl shadow-md`}
+              dangerouslySetInnerHTML={{
+                __html: formatResponse(message.text),
+              }}
             >
-              {message.text}
+              {/* <ReactMarkdown>{message.text}</ReactMarkdown> */}
             </div>
           </div>
         ))}
@@ -187,10 +184,10 @@ const Chat = () => {
             placeholder="Type your message..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+            onKeyDown={(e) => e.key === "Enter" && handlePrompt()}
           />
           <button
-            onClick={handleSend}
+            onClick={handlePrompt}
             className="absolute right-4 top-1/2 transform -translate-y-1/2 text-blue-500 hover:text-blue-700 text-xl dark:text-blue-400 dark:hover:text-blue-600"
           >
             <IoSend className="h-6 w-6" />
