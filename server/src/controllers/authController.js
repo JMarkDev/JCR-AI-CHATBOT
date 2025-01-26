@@ -10,17 +10,7 @@ const statusList = require("../constants/statusList");
 const otpController = require("./otpController");
 
 const handleRegister = async (req, res) => {
-  const {
-    image,
-    firstName,
-    lastName,
-    middleInitial,
-    email,
-    contactNumber,
-    address,
-    role,
-    password,
-  } = req.body;
+  const { name, email, password, confirmPassword } = req.body;
   try {
     const user = await userModel.findOne({
       where: {
@@ -64,14 +54,8 @@ const handleRegister = async (req, res) => {
     const hashPassword = await bcrypt.hash(password, saltsRounds);
 
     await userModel.create({
-      image: newFileName ? `/uploads/${newFileName}` : null,
-      firstName,
-      lastName,
-      middleInitial,
+      name,
       email,
-      contactNumber,
-      role,
-      address,
       status: statusList.pending,
       password: hashPassword,
       createdAt: sequelize.literal(`'${formattedDate}'`),

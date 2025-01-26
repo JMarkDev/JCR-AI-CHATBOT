@@ -69,12 +69,8 @@ const loginValidationRules = () => {
 // Validation rules for register
 const registerValidationRules = () => {
   return [
-    validateRequiredField("firstName"),
-    validateRequiredField("lastName"),
-    validateRequiredField("middleInitial"),
+    validateRequiredField("name"),
     validateEmail(),
-    validateRequiredField("contactNumber"),
-    validateRequiredField("address"),
     validatePassword(),
     body("confirmPassword").custom((value, { req }) => {
       if (!value) {
@@ -86,54 +82,6 @@ const registerValidationRules = () => {
       }
       return true;
     }),
-    body("contactNumber").custom((value, { req }) => {
-      if (!value) {
-        throw new Error("Contact Number is required");
-      }
-
-      if (req.body.contactNumber && req.body.contactNumber.length !== 11) {
-        throw new Error("Contact Number must be 11 digits");
-      }
-      return true;
-    }),
-  ];
-};
-
-const addAnimalValidation = () => {
-  return [
-    validateRequiredField("customerName"),
-    validateRequiredField("customerPhone"),
-    validateRequiredField("customerAddress"),
-    validateRequiredField("type"),
-    validateRequiredField("condition"),
-    validateRequiredField("weight"),
-    validateRequiredField("pricePerKg"),
-    validateRequiredField("total"),
-    validateRequiredField("slaughterDate"),
-    validateRequiredField("slaughterhouseId"),
-    validateRequiredField("paidAmount"),
-    validateRequiredField("balance"),
-    validateRequiredField("status"),
-    body("customerPhone").custom((value, { req }) => {
-      if (!value) {
-        throw new Error("Contact Number is required");
-      }
-
-      if (req.body.customerPhone && req.body.customerPhone.length !== 11) {
-        throw new Error("Contact Number must be 11 digits");
-      }
-      return true;
-    }),
-  ];
-};
-
-const updateProfileValidation = () => {
-  return [
-    validateRequiredField("firstName"),
-    validateRequiredField("lastName"),
-    validateRequiredField("middleInitial"),
-    validateEmail(),
-    validateRequiredField("contactNumber"),
   ];
 };
 
@@ -153,6 +101,4 @@ module.exports = {
   validateForm,
   validateEmail,
   validateForgotPassword,
-  updateProfileValidation,
-  addAnimalValidation,
 };
