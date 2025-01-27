@@ -36,7 +36,6 @@ const Register = () => {
       }
     } catch (error) {
       setLoading(false);
-      console.error(error.response.data);
       toast.error(error.response.data.message);
       if (error.response.data.errors) {
         error.response.data.errors.forEach((error) => {
