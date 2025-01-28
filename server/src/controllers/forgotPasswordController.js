@@ -46,7 +46,7 @@ const sendForgotOTP = async (email) => {
   try {
     const createdOTP = await sendOTP({
       email: email,
-      subject: "Slaughterhouse Management System forgot password OTP",
+      subject: "JCR AI CHATBOT forgot password OTP",
       message:
         "To reset your password, please verify you email with the code below:",
       duration: 5,
@@ -127,7 +127,7 @@ const resetPassword = async (req, res) => {
 
     await sendNotification({
       email: email,
-      subject: "Slaughterhouse Management System Password Reset",
+      subject: "JCR AI CHATBOT Password Reset",
       message: "Congatulations! Your password has been reset successfully.",
     });
 
