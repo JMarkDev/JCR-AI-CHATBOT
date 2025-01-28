@@ -11,6 +11,7 @@ const authRoute = require("./src/routes/authRoute");
 const app = express();
 const PORT = process.env.PORT || 5000;
 const chatbotRoute = require("./src/routes/chatbotRoute");
+const userRoute = require("./src/routes/userRoute");
 
 const corsOptions = {
   origin: ["http://localhost:5173"],
@@ -27,8 +28,6 @@ app.use(express.json());
 // 'content-type: application/x-www-form-urlencoded'
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-
-app.use("/chatbot", chatbotRoute);
 
 // public routes no token required
 
@@ -50,6 +49,10 @@ app.use("/protected", verifyToken, async (req, res) => {
 app.use(verifyToken);
 
 app.get("/");
+
+app.use("/chatbot", chatbotRoute);
+app.use("/users", userRoute);
+
 // Server setup
 const server = http.createServer(app);
 

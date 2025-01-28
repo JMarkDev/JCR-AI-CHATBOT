@@ -7,7 +7,7 @@ const sendNotification = async ({ email, subject, message }) => {
     }
 
     const mailOptions = {
-      from: "wmsuesudocumenttracker@gmail.com",
+      from: "jcraichatbot@gmail.com",
       to: email,
       subject,
       html: `<p style="font-size: 18px; color: #333; margin-bottom: 10px;">${message}</p>`,

@@ -15,7 +15,6 @@ const forgotPasswordController = require("../controllers/forgotPasswordControlle
 
 router.post(
   "/register",
-  upload.single("image"),
   registerValidationRules(),
   validateForm,
   authController.handleRegister
