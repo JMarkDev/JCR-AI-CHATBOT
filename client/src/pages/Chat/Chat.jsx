@@ -1,20 +1,17 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useContext } from "react";
 import { IoSend } from "react-icons/io5";
 import Loader from "../../components/loader/chatbot_loader/loadingBall";
 import chatbotImg from "../../assets/chat_bot.png";
 import { FaArrowDown } from "react-icons/fa6";
 import { MdOutlineLogout } from "react-icons/md";
-import LogoutModal from "../../components/loader/modal/LogoutModal";
+import LogoutModal from "../../components/modal/LogoutModal";
 import axios from "../../api/axios";
-import ReactMarkdown from "react-markdown";
+import DOMPurify from "dompurify";
+import { AuthContext } from "../../AuthContext/AuthContext";
 
 const Chat = () => {
-  const [messages, setMessages] = useState([
-    {
-      type: "bot",
-      text: "Hi! How can I assist you today?",
-    },
-  ]);
+  const { userData } = useContext(AuthContext);
+  const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [input, setInput] = useState("");
   const [darkMode, setDarkMode] = useState(false);
@@ -36,11 +33,11 @@ const Chat = () => {
       setMessages([
         ...messages,
         { type: "user", text: input },
-        { type: "bot", text: response.data.response },
+        { type: "bot", text: response.data.response }, // Properly formatted HTML response
       ]);
-      setIsLoading(false);
     } catch (error) {
       console.error("Error sending message:", error.message);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -88,8 +85,8 @@ const Chat = () => {
   //   messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   //   checkScroll(); // Recheck scroll visibility after scrolling
   // }, [messages]);
-  const formatResponse = (response) => {
-    return response.replace(/\n/g, "<br>");
+  const formatResponse = (text) => {
+    return DOMPurify.sanitize(text); // Sanitize to prevent XSS attacks
   };
   return (
     <div className="flex flex-col h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
@@ -106,7 +103,7 @@ const Chat = () => {
           </div>
           <div className="relative group">
             <div className="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-md text-blue-500 font-bold cursor-pointer dark:bg-gray-700 dark:text-gray-300">
-              J
+              {userData?.name && userData.name[0].toUpperCase()}
             </div>
           </div>
           <div>
@@ -121,8 +118,22 @@ const Chat = () => {
 
       <div
         ref={messagesContainerRef}
-        className="flex-grow overflow-y-auto mb-24 md:px-20 p-6 space-y-4"
+        className="flex-grow overflow-y-auto relative mb-24 md:px-20 p-6 space-y-4"
       >
+        {messages.length === 0 && (
+          <div className="flex flex-col items-center justify-center absolute inset-0">
+            <div className="p-8 text-center max-w-lg">
+              <h1 className="text-4xl font-extrabold mb-4 text-gray-800 dark:text-gray-100">
+                Welcome to <span className="text-blue-500">JCR</span>{" "}
+                <span className="text-gray-800 dark:text-gray-200">AI</span>
+              </h1>
+              <h2 className="text-lg text-gray-600 dark:text-gray-300">
+                How can I assist you today?
+              </h2>
+            </div>
+          </div>
+        )}
+
         {messages.map((message, index) => (
           <div
             key={index}
@@ -161,20 +172,20 @@ const Chat = () => {
           </div>
         )}
 
-        {showScrollButton && (
-          <button
-            onClick={() =>
-              messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-            }
-            className="absolute z-10 bottom-20 right-1/2 transform translate-x-1/2 bg-gray-200 dark:bg-gray-700 text-blue-400 dark:text-white p-2 rounded-full shadow-lg hover:bg-gray-300"
-          >
-            <FaArrowDown className="h-5 w-5" />
-          </button>
-        )}
-
         {/* This div will act as the scroll target */}
         <div ref={messagesEndRef} />
       </div>
+
+      {showScrollButton && (
+        <button
+          onClick={() =>
+            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+          }
+          className="absolute z-10 bottom-20 right-1/2 transform translate-x-1/2 bg-gray-200 dark:bg-gray-700 text-blue-400 dark:text-white p-2 rounded-full shadow-lg hover:bg-gray-300"
+        >
+          <FaArrowDown className="h-5 w-5" />
+        </button>
+      )}
 
       <div className="md:px-20 absolute bottom-0 w-full p-4 h-20 bg-white shadow-lg dark:bg-gray-800 flex items-center">
         <div className="relative flex-grow">

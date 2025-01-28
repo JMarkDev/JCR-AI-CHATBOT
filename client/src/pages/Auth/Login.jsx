@@ -1,24 +1,24 @@
 import logo from "../../assets/ai_logo.jpeg";
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import api from "../../api/axios";
 import LoginLoading from "../../components/loader/login_loader/Loader";
 import { toast, ToastContainer } from "react-toastify";
+import { AuthContext } from "../../AuthContext/AuthContext";
 
 const Login = () => {
+  const { fetchUser } = useContext(AuthContext);
   const navigate = useNavigate();
   const [data, setData] = useState({
     email: "",
     password: "",
   });
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
     setEmailError("");
     setPasswordError("");
     setLoading(true);
@@ -26,13 +26,17 @@ const Login = () => {
     try {
       const response = await api.post("/auth/login", data);
       if (response.data.status === "success") {
-        navigate("/chat");
+        fetchUser();
         toast.success(response.data.message);
         setLoading(false);
+        setTimeout(() => {
+          navigate("/chat");
+        }, 500);
       }
     } catch (error) {
       setLoading(false);
-      toast.error(error.response.data.message);
+      console.log(error);
+      toast.error(error.response?.data?.message);
       if (error.response.data.errors) {
         error.response.data.errors.forEach((error) => {
           switch (error.path) {

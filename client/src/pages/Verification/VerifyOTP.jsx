@@ -1,22 +1,30 @@
 import LoginLoading from "../../components/loader/login_loader/Loader";
 import sentImage from "../../assets/undraw_mail-sent_ujev.svg";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import api from "../../api/axios";
 import Cookies from "js-cookie";
 import { ToastContainer, toast } from "react-toastify";
 import "./otp.css";
 import { IoReturnUpBackOutline } from "react-icons/io5";
+import { AuthContext } from "../../AuthContext/AuthContext";
 
 const VerifyOTP = () => {
+  const { fetchUser } = useContext(AuthContext);
   const location = useLocation();
   const email = location.state?.email;
-  console.log(email);
   const navigate = useNavigate();
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [countDown, setCountDown] = useState(0);
+
+  useEffect(() => {
+    // Check if email exists in location.state
+    if (!email) {
+      navigate("/login"); // Redirect to login if no email is provided
+    }
+  }, [email, navigate]);
 
   const handleChange = (e, index) => {
     const { value } = e.target;
@@ -56,8 +64,10 @@ const VerifyOTP = () => {
           api.defaults.headers.common[
             "Authorization"
           ] = `Bearer ${accessToken}`;
-
-          navigate("/chat");
+          fetchUser();
+          setTimeout(() => {
+            navigate("/chat");
+          }, 500);
         }
       }
     } catch (error) {
