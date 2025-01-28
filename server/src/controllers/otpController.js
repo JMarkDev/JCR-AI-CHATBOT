@@ -12,7 +12,7 @@ const postOTP = async (email) => {
   try {
     const createdOTP = await sendOTP({
       email: email,
-      subject: "Slaughterhouse Management System Verification Code",
+      subject: "JCR AI CHATBOT Verification Code",
       message: "Verify your email with the code below.",
       duration: 5,
     });
@@ -31,9 +31,6 @@ const verifyOTP = async (req, res) => {
   const formattedDate = date.format(createdAt, "YYYY-MM-DD HH:mm:ss", true); // true for UTC time;
 
   try {
-    const userData = await userModel.findOne({ where: { email: email } });
-    const { role: userRole, status } = userData;
-
     const matchedOTPRecord = await otpModel.findOne({
       where: { email: email },
     });
@@ -55,36 +52,23 @@ const verifyOTP = async (req, res) => {
       });
     }
 
-    const registeredUser = await userModel.findOne({
-      where: { email: email, status: statusList.verified },
-    });
+    await userModel.update(
+      {
+        status: statusList.verified,
+        updatedAt: sequelize.literal(`'${formattedDate}'`),
+      },
+      { where: { email: email } }
+    );
 
-    // initialize access token
-    let accessToken = null;
-
-    if (!registeredUser) {
-      await userModel.update(
-        {
-          status: statusList.verified,
-          updatedAt: sequelize.literal(`'${formattedDate}'`),
-        },
-        { where: { email: email } }
-      );
-    } else {
-      //  generate tokens
-      const tokens = setTokens(res, { email, userRole });
-      accessToken = tokens.accessToken;
-    }
-
+    //  generate tokens
+    const tokens = setTokens(res, { email });
+    const accessToken = tokens.accessToken;
     // Delete the OTP after successful verification
     await otpModel.destroy({ where: { email: email } });
 
     return res.status(200).json({
       status: "success",
-      message: registeredUser
-        ? "Registration Successful"
-        : "Registration Successful. Please login your account",
-      role: userRole,
+      message: "Registration successful",
       accessToken: accessToken,
     });
   } catch (error) {
@@ -108,7 +92,7 @@ const resendOTP = async (req, res) => {
 
     const createdOTP = await sendOTP({
       email: email,
-      subject: "Slaughterhouse Management System Verification Code",
+      subject: "JCR AI CHATBOT Verification Code",
       message: "Verify your email with the code below.",
       duration: 5,
     });
