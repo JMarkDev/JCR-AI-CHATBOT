@@ -3,7 +3,6 @@ const bcrypt = require("bcryptjs");
 const saltsRounds = 10;
 const sequelize = require("../config/database");
 require("dotenv").config();
-const fs = require("fs");
 const date = require("date-and-time");
 const { setTokens } = require("../helpers/tokenHelpers");
 const statusList = require("../constants/statusList");
@@ -11,6 +10,8 @@ const otpController = require("./otpController");
 
 const handleRegister = async (req, res) => {
   const { name, email, password, confirmPassword } = req.body;
+  console.log(req.body);
+
   try {
     const user = await userModel.findOne({
       where: {
@@ -35,21 +36,6 @@ const handleRegister = async (req, res) => {
 
     const createdAt = new Date();
     const formattedDate = date.format(createdAt, "YYYY-MM-DD HH:mm:ss", true); // true for UTC time;
-
-    // upload image
-    let newFileName = null;
-    if (req.file) {
-      let filetype = req.file.mimetype.split("/")[1];
-      newFileName = req.file.filename + "." + filetype;
-      fs.rename(
-        `./uploads/${req.file.filename}`,
-        `./uploads/${newFileName}`,
-        async (err) => {
-          if (err) throw err;
-          console.log("uploaded successfully");
-        }
-      );
-    }
 
     const hashPassword = await bcrypt.hash(password, saltsRounds);
 
@@ -90,13 +76,12 @@ const handleLogin = async (req, res) => {
 
     if (matchPassword) {
       //  generate tokens
-      const tokens = setTokens(res, { email, role: user.role });
+      const tokens = setTokens(res, { email });
       accessToken = tokens.accessToken;
 
       return res.status(200).json({
         status: "success",
         message: "Login successful",
-        role: user.role,
         accessToken: accessToken,
       });
     } else {
