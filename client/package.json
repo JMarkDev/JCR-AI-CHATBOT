@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "axios": "^1.7.9",
+    "dompurify": "^3.2.3",
     "js-cookie": "^3.0.5",
     "portfolio": "file:",
     "proptypes": "^1.1.0",
@@ -17,6 +19,7 @@
     "react-dom": "^18.3.1",
     "react-icons": "^5.4.0",
     "react-router-dom": "^7.1.1",
+    "react-toastify": "^11.0.3",
     "tailwind-plugin-typed": "^0.8.0"
   },
   "devDependencies": {

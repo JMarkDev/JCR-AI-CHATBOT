@@ -1,17 +1,17 @@
 import { useNavigate } from "react-router-dom";
-import Cookies from "js-cookie";
+// import Cookies from "js-cookie";
 import Img404 from "../assets/undraw_page-not-found_6wni (1).svg";
 
 function PageNotFound() {
   const navigate = useNavigate();
-  const goBack = () => {
-    // const token = Cookies.get("accessToken");
-    // if (!token) {
-    //   navigate("/home");
-    // } else {
-    //   window.history.back();
-    // }
-  };
+  // const goBack = () => {
+  //   // const token = Cookies.get("accessToken");
+  //   // if (!token) {
+  //   //   navigate("/home");
+  //   // } else {
+  //   //   window.history.back();
+  //   // }
+  // };
 
   return (
     <>
