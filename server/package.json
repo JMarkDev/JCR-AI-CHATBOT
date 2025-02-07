@@ -37,6 +37,7 @@
     "multer-storage-cloudinary": "^4.0.0",
     "mysql2": "^3.9.7",
     "nodemailer": "^6.9.13",
+    "openai": "^4.81.0",
     "parser": "^0.1.4",
     "path": "^0.12.7",
     "sequelize": "^6.37.3",

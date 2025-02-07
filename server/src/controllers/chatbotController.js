@@ -32,8 +32,11 @@
 // };
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 require("dotenv").config();
+const { OpenAI } = require("openai");
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
@@ -64,6 +67,29 @@ const chatbotPrompt = async (req, res) => {
   }
 };
 
+// Initialize OpenAI GPT
+const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
+
+// Function to generate response using OpenAI
+const openAIChatbotPrompt = async (req, res) => {
+  const { prompt } = req.body;
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4", // You can switch to "gpt-3.5-turbo" if needed
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.7,
+    });
+
+    const responseText = completion.choices[0].message.content.trim();
+    res.status(200).json({ response: responseText });
+  } catch (error) {
+    console.error("OpenAI Error:", error.message);
+    res.status(500).json({ error: "Error generating response from OpenAI." });
+  }
+};
+
 module.exports = {
   chatbotPrompt,
+  openAIChatbotPrompt,
 };

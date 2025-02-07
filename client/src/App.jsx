@@ -5,8 +5,8 @@ import Chat from "./pages/Chat/Chat";
 import PageNotFound from "./pages/PageNotFound";
 import VerifyOTP from "./pages/Verification/VerifyOTP";
 import ForgotPassword from "./pages/Auth/ForgotPassword";
-import ProtectedRoute from "./ProtectedRoute/ProtectedRoute";
-import PublicRoute from "./ProtectedRoute/PublicRoute";
+import ProtectedRoute from "./route/ProtectedRoute";
+import PublicRoute from "./route/PublicRoute";
 
 function App() {
   return (

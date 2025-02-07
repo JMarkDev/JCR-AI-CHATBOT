@@ -2,11 +2,11 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 const generateAccessToken = (user) => {
-  return jwt.sign(user, process.env.ACCESS_TOKEN, { expiresIn: "30d" });
+  return jwt.sign(user, process.env.ACCESS_TOKEN, { expiresIn: "1d" });
 };
 
 const generateRefreshToken = (user) => {
-  return jwt.sign(user, process.env.REFRESH_TOKEN, { expiresIn: "3d" });
+  return jwt.sign(user, process.env.REFRESH_TOKEN, { expiresIn: "1d" });
 };
 
 const setTokens = (res, user) => {
