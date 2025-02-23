@@ -12,21 +12,15 @@ function App() {
   return (
     <>
       <Routes>
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Chat />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/" element={<Chat />} />
         <Route
           path="/chat"
-          element={
-            <ProtectedRoute>
-              <Chat />
-            </ProtectedRoute>
-          }
+          // element={
+          //   <ProtectedRoute>
+          //     <Chat />
+          //   </ProtectedRoute>
+          // }
+          element={<Chat />}
         />
 
         <Route

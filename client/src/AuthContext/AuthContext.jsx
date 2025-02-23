@@ -40,6 +40,8 @@ export const AuthProvider = ({ children }) => {
       );
       if (response.data.status === "success") {
         setUserData(null);
+        localStorage.clear();
+        window.location.href = "/login";
         Cookies.remove("accessToken");
         Cookies.remove("refreshToken");
       }
