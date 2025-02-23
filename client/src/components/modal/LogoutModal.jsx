@@ -9,7 +9,9 @@ const LogoutModal = ({ isOpen, toggleModal }) => {
   const handleLogout = () => {
     logout();
     toggleModal();
+    // setTimeout(() => {
     navigate("/login");
+    // }, 500);
   };
   return (
     <>
