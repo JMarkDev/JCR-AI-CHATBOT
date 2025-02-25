@@ -9,7 +9,7 @@ import axios from "../../api/axios";
 import DOMPurify from "dompurify";
 import { AuthContext } from "../../AuthContext/AuthContext";
 import Sidebar from "../../components/Sidebar";
-import LoginRegisterModel from "../../components/modal/LoginRegisterModel";
+import LoginRegisterModel from "../../components/modal/LoginRegisterModal";
 
 const Chat = () => {
   const { userData } = useContext(AuthContext);
@@ -167,6 +167,11 @@ const Chat = () => {
   const formatResponse = (text) => {
     return DOMPurify.sanitize(text); // Sanitize to prevent XSS attacks
   };
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    checkScroll(); // Recheck scroll visibility after scrolling
+  }, [messages]);
   return (
     <div className="flex justify-between h-screen">
       {!userData && <LoginRegisterModel />}
@@ -181,10 +186,6 @@ const Chat = () => {
           handleDelete={handleDelete}
         />
       )}
-
-      {/* <div className="md:w-[calc(100%-250px)] w-full bg-red-500 h-screen">
-        hahahah
-      </div> */}
 
       <div
         className={`flex w-full ${
