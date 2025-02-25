@@ -2,19 +2,30 @@ const { body, validationResult } = require("express-validator");
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// Reusable validation functions
 const validateEmail = () => {
-  return body("email").custom((value) => {
-    if (!value) {
-      throw new Error("Email is required");
-    }
-    if (!value.match(emailRegex)) {
-      throw new Error("Enter a valid email address(e.g. sample@gmail.com).");
-    }
-    return true;
-  });
-};
+  return body("email")
+    .notEmpty()
+    .withMessage("Email is required")
+    .isEmail()
+    .withMessage("Enter a valid email address (e.g. sample@gmail.com).")
+    .custom((value) => {
+      // Allow only specific domains
+      const allowedDomains = [
+        "gmail.com",
+        "yahoo.com",
+        "outlook.com",
+        "protonmail.com",
+      ];
+      const domain = value.split("@")[1]; // Extract domain from email
 
+      if (!allowedDomains.includes(domain)) {
+        throw new Error(
+          `Invalid email domain. Allowed: ${allowedDomains.join(", ")}`
+        );
+      }
+      return true;
+    });
+};
 const validatePassword = () => {
   return body("password").custom((value) => {
     if (!value) {
