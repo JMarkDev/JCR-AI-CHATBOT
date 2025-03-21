@@ -3,16 +3,22 @@ import { IoSend } from "react-icons/io5";
 import Loader from "../../components/loader/chatbot_loader/loadingBall";
 import chatbotImg from "../../assets/chat_bot.png";
 import { FaArrowDown } from "react-icons/fa6";
-import { MdOutlineLogout } from "react-icons/md";
+// import { MdOutlineLogout } from "react-icons/md";
 import LogoutModal from "../../components/modal/LogoutModal";
 import axios from "../../api/axios";
 import DOMPurify from "dompurify";
 import { AuthContext } from "../../AuthContext/AuthContext";
 import Sidebar from "../../components/Sidebar";
 import LoginRegisterModel from "../../components/modal/LoginRegisterModal";
+import profileImg from "../../assets/user-profile.png";
+import NavProfile from "../../components/NavProfile";
+import { toast, ToastContainer } from "react-toastify";
+import WelcomeModal from "../../components/WelcomeModal";
+import PaymentModal from "../../components/Payment/PaymentModal";
+import SuccessPayment from "../../components/Payment/SuccessPayment";
 
 const Chat = () => {
-  const { userData } = useContext(AuthContext);
+  const { userData, fetchUser } = useContext(AuthContext);
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [input, setInput] = useState("");
@@ -23,22 +29,44 @@ const Chat = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [chatHistory, setChatHistory] = useState([]);
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
+  const [showProfile, setShowProfile] = useState(false);
+  const [welcomeModal, setWelcomeModal] = useState(true);
+  const [paymentModal, setPaymentModal] = useState(false);
+  const [successPayment, setSuccessPayment] = useState(false);
+
   const generateSessionId = () => {
     return `session-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
   };
-
   const [sessionId, setSessionId] = useState(
     localStorage.getItem("sessionId") || generateSessionId()
   );
 
   useEffect(() => {
+    localStorage.setItem("sessionId", sessionId);
+    if (
+      userData?.freeQuestions < 1 &&
+      (userData?.paidQuestions || 0) < 1 &&
+      (!userData?.subscriptionExpiry ||
+        new Date(userData.subscriptionExpiry) < new Date())
+    ) {
+      setPaymentModal(true);
+    }
+  }, [sessionId, userData]);
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
+  const handleProfile = () => {
+    setShowProfile(!showProfile);
+  };
+
+  useEffect(() => {
     const fetchChatHistory = async () => {
+      let status = "active";
       try {
         const response = await axios.get(
-          `/chatbot/get-by-session?userId=${userData?.id}`
+          `/chatbot/get-by-session?userId=${userData?.id}&status=${status}`
         );
 
         setChatHistory(response.data.userSessions);
@@ -47,7 +75,7 @@ const Chat = () => {
       }
     };
     fetchChatHistory();
-  }, [messages, sessionId, userData?.id]);
+  }, [messages, userData?.id]);
 
   const handleHistoryClick = async (sessionId) => {
     try {
@@ -67,17 +95,19 @@ const Chat = () => {
     setSessionId(newSession); // Update session ID
   };
 
-  const handleDelete = async (session) => {
+  const archiveSession = async (session) => {
     try {
-      await axios.delete(
-        `/chatbot/delete-session?userId=${userData?.id}&sessionId=${session}`
+      let status = "archived";
+      const response = await axios.put(
+        `/chatbot/archive-session?userId=${userData?.id}&sessionId=${session}&status=${status}`
       );
 
+      toast.success(response.data.message);
       // Remove deleted session from history
       setChatHistory((prevHistory) =>
         prevHistory.filter((chat) => chat.sessionId !== session)
       );
-
+      setMessages([]);
       // If the deleted session is the current one, reset it
       if (session === sessionId) {
         const newSession = generateSessionId();
@@ -92,16 +122,22 @@ const Chat = () => {
         setMessages(response.data.chatHistory);
       }
     } catch (error) {
-      console.error("Error deleting session:", error.message);
+      console.error("Error archiving session:", error.message);
     }
   };
 
-  useEffect(() => {
-    localStorage.setItem("sessionId", sessionId);
-  }, [sessionId]);
-
   const handlePrompt = async () => {
     if (isLoading || !input.trim()) return;
+    // Check if user has exhausted free and paid questions and has no active subscription
+    if (
+      userData?.freeQuestions < 1 &&
+      (userData?.paidQuestions || 0) < 1 &&
+      (!userData?.subscriptionExpiry ||
+        new Date(userData.subscriptionExpiry) < new Date())
+    ) {
+      setPaymentModal(true); // Show payment modal
+      return;
+    }
 
     setMessages([...messages, { type: "user", text: input }]);
     setInput("");
@@ -119,6 +155,7 @@ const Chat = () => {
         { type: "user", text: input },
         { type: "bot", text: response.data.response }, // Properly formatted HTML response
       ]);
+      fetchUser();
     } catch (error) {
       console.error("Error sending message:", error.message);
     } finally {
@@ -172,8 +209,34 @@ const Chat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     checkScroll(); // Recheck scroll visibility after scrolling
   }, [messages]);
+
   return (
     <div className="flex justify-between h-screen">
+      <ToastContainer />
+      {userData?.freeQuestions > 0 && (
+        <WelcomeModal
+          isOpen={welcomeModal}
+          onClose={setWelcomeModal}
+          freeQuestions={userData?.freeQuestions}
+        />
+      )}
+
+      {userData?.freeQuestions < 1 &&
+        (userData?.paidQuestions || 0) < 1 &&
+        (!userData?.subscriptionExpiry ||
+          new Date(userData.subscriptionExpiry) < new Date()) && (
+          <PaymentModal
+            isOpen={paymentModal}
+            onClose={setPaymentModal}
+            userId={userData?.id}
+            setSuccessPayment={setSuccessPayment}
+          />
+        )}
+
+      {successPayment && (
+        <SuccessPayment onClose={() => setSuccessPayment(!successPayment)} />
+      )}
+
       {!userData && <LoginRegisterModel />}
 
       {userData && (
@@ -183,7 +246,7 @@ const Chat = () => {
           handleNewSession={handleNewSession}
           chatHistory={chatHistory}
           handleHistoryClick={handleHistoryClick}
-          handleDelete={handleDelete}
+          handleDelete={archiveSession}
         />
       )}
 
@@ -230,16 +293,35 @@ const Chat = () => {
                   <span className="slider"></span>
                 </label>
               </div>
-              <div className="relative group">
+              <div className="relative group flex gap-2 items-center">
                 <div className="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-md text-blue-500 font-bold cursor-pointer dark:bg-gray-700 dark:text-gray-300">
-                  {userData?.name && userData.name[0].toUpperCase()}
+                  {/* {userData?.image ? `${userData?.image}` : `${profileImg}`} */}
+                  <img
+                    src={
+                      userData?.image
+                        ? `${axios.defaults.baseURL}${userData?.image}`
+                        : `${profileImg}`
+                    }
+                    className=" rounded-full"
+                    onClick={handleProfile}
+                    onMouseEnter={handleProfile}
+                    alt="profile"
+                  />
                 </div>
+                <p className="text-nowrap dark:text-white font-bold">
+                  {userData?.name && userData.name}
+                </p>
+
+                {showProfile && (
+                  <div
+                    onMouseLeave={handleProfile}
+                    className="absolute top-full mt-2 w-full text-sm"
+                  >
+                    <NavProfile toggleModal={toggleModal} />
+                  </div>
+                )}
               </div>
               <div>
-                <MdOutlineLogout
-                  onClick={toggleModal}
-                  className="text-white dark:text-gray-100 text-2xl cursor-pointer"
-                />
                 <LogoutModal isOpen={isOpen} toggleModal={toggleModal} />
               </div>
             </div>

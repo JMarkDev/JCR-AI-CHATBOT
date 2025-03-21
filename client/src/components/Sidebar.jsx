@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { IoAdd } from "react-icons/io5";
 import { BsThreeDots } from "react-icons/bs";
 import PropTypes from "prop-types";

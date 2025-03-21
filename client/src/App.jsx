@@ -7,6 +7,7 @@ import VerifyOTP from "./pages/Verification/VerifyOTP";
 import ForgotPassword from "./pages/Auth/ForgotPassword";
 import ProtectedRoute from "./route/ProtectedRoute";
 import PublicRoute from "./route/PublicRoute";
+import Profile from "./pages/Profile/Profile";
 
 function App() {
   return (
@@ -21,6 +22,22 @@ function App() {
           //   </ProtectedRoute>
           // }
           element={<Chat />}
+        />
+        <Route
+          path="/user-profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/recently-deleted"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
         />
 
         <Route
