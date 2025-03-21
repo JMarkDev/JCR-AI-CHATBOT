@@ -34,6 +34,8 @@ const ChatHistory = require("../models/chatHistoryModel");
 const { OpenAI } = require("openai");
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const sequelize = require("../config/database");
+const date = require("date-and-time");
+const userModel = require("../models/userModel");
 
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 require("dotenv").config();
@@ -52,6 +54,15 @@ const chatbotPrompt = async (req, res) => {
       sessionId,
       type: "user",
       text: prompt,
+      status: "active",
+    });
+
+    // Decrease freeQuestions by 1
+    await userModel.increment("freeQuestions", {
+      by: -1,
+      where: {
+        id: userId,
+      },
     });
     const result = await model.generateContent(prompt);
     // Get raw response text
@@ -73,6 +84,7 @@ const chatbotPrompt = async (req, res) => {
       userId,
       sessionId,
       type: "bot",
+      status: "active",
       text: formattedResponse,
     });
     res.status(200).json({ response: formattedResponse });
@@ -98,8 +110,44 @@ const getChatHistory = async (req, res) => {
   }
 };
 
+// const generateTitle = (text) => {
+//   if (!text || text.length < 3) return "New Chat"; // Ignore very short messages
+
+//   // Common words to remove
+//   const stopWords = new Set([
+//     "what",
+//     "is",
+//     "how",
+//     "the",
+//     "a",
+//     "an",
+//     "to",
+//     "of",
+//     "and",
+//     "or",
+//     "in",
+//     "for",
+//     "this",
+//     "that",
+//     "on",
+//     "with",
+//     "as",
+//   ]);
+
+//   const words = text
+//     .replace(/[^\w\s]/g, "") // Remove punctuation
+//     .split(/\s+/)
+//     // .filter((word) => !stopWords.has(word.toLowerCase()))
+//     .slice(0, 10); // Keep up to 5 important words
+
+//   return words.length ? words.join(" ") + "..." : "New Chat";
+// };
+
 const generateTitle = (text) => {
   if (!text || text.length < 3) return "New Chat"; // Ignore very short messages
+
+  // Remove HTML tags
+  const cleanText = text.replace(/<\/?[^>]+(>|$)/g, "").trim();
 
   // Common words to remove
   const stopWords = new Set([
@@ -122,22 +170,21 @@ const generateTitle = (text) => {
     "as",
   ]);
 
-  const words = text
+  const words = cleanText
     .replace(/[^\w\s]/g, "") // Remove punctuation
     .split(/\s+/)
-    // .filter((word) => !stopWords.has(word.toLowerCase()))
-    .slice(0, 5); // Keep up to 5 important words
+    .slice(0, 15); // Keep up to 10 important words
 
   return words.length ? words.join(" ") + "..." : "New Chat";
 };
 
 const getUserSessions = async (req, res) => {
-  const { userId } = req.query;
+  const { userId, status } = req.query;
 
   try {
     // Fetch unique sessions sorted by creation date
     const userSessions = await ChatHistory.findAll({
-      where: { userId },
+      where: { userId, status },
       attributes: [
         "sessionId",
         [sequelize.fn("MIN", sequelize.col("createdAt")), "createdAt"],
@@ -186,10 +233,34 @@ const deleteSession = async (req, res) => {
 
   try {
     await ChatHistory.destroy({ where: { userId, sessionId } });
-    res.status(200).json({ message: "Session deleted successfully." });
+    res.status(200).json({ message: "History deleted successfully." });
   } catch (error) {
     console.error("Error deleting session:", error.message);
     res.status(500).json({ error: error.message });
+  }
+};
+
+const archiveSession = async (req, res) => {
+  const { userId, sessionId, status } = req.query;
+
+  try {
+    const createdAt = new Date();
+    const formattedDate = date.format(createdAt, "YYYY-MM-DD HH:mm:ss", true); // true for UTC time
+
+    await ChatHistory.update(
+      {
+        status: status,
+        updatedAt: sequelize.literal(`'${formattedDate}'`),
+      },
+      {
+        where: { userId, sessionId },
+      }
+    );
+    return res.status(200).json({
+      message: `Chat history ${status === "archived" ? "Deleted" : "Restored"}`,
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
   }
 };
 
@@ -221,4 +292,5 @@ module.exports = {
   getChatHistory,
   getUserSessions,
   deleteSession,
+  archiveSession,
 };

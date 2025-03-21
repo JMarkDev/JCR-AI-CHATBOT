@@ -29,6 +29,13 @@ app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 
+app.use(express.static("public"));
+app.use("/uploads", express.static("uploads"));
+app.get("/uploads/:filename", (req, res) => {
+  const filename = req.params.filename;
+  res.sendFile(`${__dirname}/uploads/${filename}`);
+});
+
 // public routes no token required
 
 app.use("/auth", authRoute);

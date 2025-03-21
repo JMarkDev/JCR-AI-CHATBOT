@@ -1,31 +1,35 @@
 const { body, validationResult } = require("express-validator");
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const allowedDomains = [
+  "gmail.com",
+  "yahoo.com",
+  "outlook.com",
+  "protonmail.com",
+];
 
 const validateEmail = () => {
   return body("email")
     .notEmpty()
     .withMessage("Email is required")
-    .isEmail()
+    .bail()
+    .matches(emailRegex)
     .withMessage("Enter a valid email address (e.g. sample@gmail.com).")
+    .bail()
     .custom((value) => {
-      // Allow only specific domains
-      const allowedDomains = [
-        "gmail.com",
-        "yahoo.com",
-        "outlook.com",
-        "protonmail.com",
-      ];
-      const domain = value.split("@")[1]; // Extract domain from email
+      const domain = value.split("@")[1]; // Extract domain
 
       if (!allowedDomains.includes(domain)) {
         throw new Error(
           `Invalid email domain. Allowed: ${allowedDomains.join(", ")}`
         );
       }
+
       return true;
     });
 };
+
+module.exports = validateEmail;
 const validatePassword = () => {
   return body("password").custom((value) => {
     if (!value) {
@@ -96,6 +100,14 @@ const registerValidationRules = () => {
   ];
 };
 
+const updateProfileValidation = () => {
+  return [
+    validateRequiredField("name"),
+    validateRequiredField("birthDate"),
+    validateRequiredField("contactNumber"),
+  ];
+};
+
 // Middleware to validate form
 const validateForm = (req, res, next) => {
   const errors = validationResult(req);
@@ -112,4 +124,5 @@ module.exports = {
   validateForm,
   validateEmail,
   validateForgotPassword,
+  updateProfileValidation,
 };

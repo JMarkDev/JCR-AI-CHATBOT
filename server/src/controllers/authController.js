@@ -10,7 +10,6 @@ const otpController = require("./otpController");
 
 const handleRegister = async (req, res) => {
   const { name, email, password, confirmPassword } = req.body;
-  console.log(req.body);
 
   try {
     const user = await userModel.findOne({
@@ -44,6 +43,7 @@ const handleRegister = async (req, res) => {
       email,
       status: statusList.pending,
       password: hashPassword,
+      freeQuestions: 10,
       createdAt: sequelize.literal(`'${formattedDate}'`),
     });
 

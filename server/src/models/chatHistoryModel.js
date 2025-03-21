@@ -25,6 +25,10 @@ const ChatHistory = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: false,
     },
+    status: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     createdAt: {
       type: DataTypes.DATE,
       allowNull: false,
